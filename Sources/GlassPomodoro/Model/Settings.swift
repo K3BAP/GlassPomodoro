@@ -12,7 +12,7 @@ final class Settings: Codable {
     var snoozeMinutes: Int = 5
     var promptCountdownSeconds: Int = 10
 
-    var autoStartFocus: Bool = true
+    var autoStartFocus: Bool = false
 
     var soundEnabled: Bool = true
     var notificationsEnabled: Bool = true
@@ -42,7 +42,7 @@ final class Settings: Codable {
         iterationsBeforeLongBreak = try c.decodeIfPresent(Int.self, forKey: .iterationsBeforeLongBreak) ?? 4
         snoozeMinutes = try c.decodeIfPresent(Int.self, forKey: .snoozeMinutes) ?? 5
         promptCountdownSeconds = try c.decodeIfPresent(Int.self, forKey: .promptCountdownSeconds) ?? 10
-        autoStartFocus = try c.decodeIfPresent(Bool.self, forKey: .autoStartFocus) ?? true
+        autoStartFocus = try c.decodeIfPresent(Bool.self, forKey: .autoStartFocus) ?? false
         soundEnabled = try c.decodeIfPresent(Bool.self, forKey: .soundEnabled) ?? true
         notificationsEnabled = try c.decodeIfPresent(Bool.self, forKey: .notificationsEnabled) ?? true
         launchAtLogin = try c.decodeIfPresent(Bool.self, forKey: .launchAtLogin) ?? false
