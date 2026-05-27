@@ -24,7 +24,7 @@ final class PomodoroEngine {
     private(set) var breakPromptActive: Bool = false
     /// The break that will begin once the prompt resolves.
     private(set) var pendingBreakPhase: Phase = .shortBreak
-    /// Seconds left before the break auto-starts (only when `autoStartBreaks`).
+    /// Seconds left before the break auto-starts.
     private(set) var promptCountdownRemaining: Int = 0
 
     /// True after a break has finished and we are waiting for the user to confirm
@@ -43,11 +43,6 @@ final class PomodoroEngine {
     /// Whether the full-screen overlay should currently be shown.
     var isOverlayActive: Bool {
         breakPromptActive || phase.isBreak || awaitingFocusConfirmation
-    }
-
-    /// Whether the break prompt is counting down to an automatic start.
-    var promptShowsCountdown: Bool {
-        breakPromptActive && settings.autoStartBreaks
     }
 
     private static let totalKey = "stats.totalFocusSessions"
@@ -108,13 +103,13 @@ final class PomodoroEngine {
         nextBreakDoubled = true
         completedFocusCount += 1
         recordFinishedFocus()
-        beginFocus(autoStart: settings.autoStartFocus)
+        beginFocus(autoStart: true)
     }
 
     /// End the current break early (from the full-screen overlay) and return to focus.
     func endBreak() {
         guard phase.isBreak else { return }
-        beginFocus(autoStart: settings.autoStartFocus)
+        beginFocus(autoStart: true)
     }
 
     /// Extend the current break by 5 minutes (from the full-screen overlay).
@@ -173,7 +168,7 @@ final class PomodoroEngine {
         } else {
             // A break finished. (Focus completion is counted when the break begins or is
             // skipped, not here, to avoid double-counting.)
-            if settings.fullScreenBreakOverlay {
+            if settings.fullScreenBreakOverlay && !settings.autoStartFocus {
                 // Wait for the user to confirm they are ready to focus again.
                 isRunning = false
                 stopTicker()
@@ -191,9 +186,7 @@ final class PomodoroEngine {
         promptCountdownRemaining = max(0, settings.promptCountdownSeconds)
         announce("Time for a break", "Your \(pendingBreakPhase.title.lowercased()) is ready.", pendingBreakPhase)
         notifyOverlay()
-        if settings.autoStartBreaks {
-            startTicker()   // ticker now drives the prompt countdown
-        }
+        startTicker()   // ticker drives the prompt countdown to an automatic start
     }
 
     private func computeBreakPhase() -> Phase {
@@ -257,7 +250,6 @@ final class PomodoroEngine {
 
     private func tick() {
         if breakPromptActive {
-            guard settings.autoStartBreaks else { return }
             promptCountdownRemaining -= 1
             if promptCountdownRemaining <= 0 {
                 breakPromptActive = false

@@ -10,7 +10,7 @@ struct PomodoroPanelView: View {
     var body: some View {
         Group {
             if engine.breakPromptActive {
-                BreakPromptView(engine: engine, showCountdown: model.settings.autoStartBreaks)
+                BreakPromptView(engine: engine)
             } else if engine.awaitingFocusConfirmation {
                 confirmFocusView
             } else if showingSettings {

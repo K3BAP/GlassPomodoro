@@ -13,7 +13,6 @@ final class Settings: Codable {
     var promptCountdownSeconds: Int = 10
 
     var autoStartFocus: Bool = true
-    var autoStartBreaks: Bool = true
 
     var soundEnabled: Bool = true
     var notificationsEnabled: Bool = true
@@ -28,7 +27,7 @@ final class Settings: Codable {
     enum CodingKeys: String, CodingKey {
         case focusMinutes, shortBreakMinutes, longBreakMinutes, iterationsBeforeLongBreak
         case snoozeMinutes, promptCountdownSeconds
-        case autoStartFocus, autoStartBreaks
+        case autoStartFocus
         case soundEnabled, notificationsEnabled, launchAtLogin, showMenuBarCountdown
         case fullScreenBreakOverlay
     }
@@ -42,7 +41,6 @@ final class Settings: Codable {
         snoozeMinutes = try c.decodeIfPresent(Int.self, forKey: .snoozeMinutes) ?? 5
         promptCountdownSeconds = try c.decodeIfPresent(Int.self, forKey: .promptCountdownSeconds) ?? 10
         autoStartFocus = try c.decodeIfPresent(Bool.self, forKey: .autoStartFocus) ?? true
-        autoStartBreaks = try c.decodeIfPresent(Bool.self, forKey: .autoStartBreaks) ?? true
         soundEnabled = try c.decodeIfPresent(Bool.self, forKey: .soundEnabled) ?? true
         notificationsEnabled = try c.decodeIfPresent(Bool.self, forKey: .notificationsEnabled) ?? true
         launchAtLogin = try c.decodeIfPresent(Bool.self, forKey: .launchAtLogin) ?? false
@@ -59,7 +57,6 @@ final class Settings: Codable {
         try c.encode(snoozeMinutes, forKey: .snoozeMinutes)
         try c.encode(promptCountdownSeconds, forKey: .promptCountdownSeconds)
         try c.encode(autoStartFocus, forKey: .autoStartFocus)
-        try c.encode(autoStartBreaks, forKey: .autoStartBreaks)
         try c.encode(soundEnabled, forKey: .soundEnabled)
         try c.encode(notificationsEnabled, forKey: .notificationsEnabled)
         try c.encode(launchAtLogin, forKey: .launchAtLogin)

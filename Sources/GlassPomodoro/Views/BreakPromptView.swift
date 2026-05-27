@@ -1,10 +1,9 @@
 import SwiftUI
 
 /// Shown when a break is due: skip, snooze (+5), or start the break now.
-/// If `autoStartBreaks` is on, a countdown auto-starts the break.
+/// A countdown auto-starts the break when it reaches zero.
 struct BreakPromptView: View {
     let engine: PomodoroEngine
-    let showCountdown: Bool
 
     var body: some View {
         VStack(spacing: 14) {
@@ -14,17 +13,11 @@ struct BreakPromptView: View {
                     .foregroundStyle(engine.pendingBreakPhase.tint)
                 Text("Time for a \(engine.pendingBreakPhase.title.lowercased())")
                     .font(.headline)
-                if showCountdown {
-                    Text("Starts in \(engine.promptCountdownRemaining)s")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                        .contentTransition(.numericText())
-                        .animation(.snappy, value: engine.promptCountdownRemaining)
-                } else {
-                    Text("Choose how to continue")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                }
+                Text("Starts in \(engine.promptCountdownRemaining)s")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .contentTransition(.numericText())
+                    .animation(.snappy, value: engine.promptCountdownRemaining)
             }
 
             VStack(spacing: 8) {

@@ -34,7 +34,6 @@ struct SettingsView: View {
                     section("Break prompt") {
                         stepperRow("Snooze length", value: bind(\.snoozeMinutes), range: 1...30)
                         stepperRow("Auto-start countdown (sec)", value: bind(\.promptCountdownSeconds), range: 3...60)
-                        toggleRow("Auto-start breaks", value: bind(\.autoStartBreaks))
                         toggleRow("Auto-start focus", value: bind(\.autoStartFocus))
                     }
 

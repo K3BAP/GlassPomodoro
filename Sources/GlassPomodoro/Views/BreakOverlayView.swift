@@ -49,13 +49,11 @@ struct BreakOverlayView: View {
                    title: "Time for a \(engine.pendingBreakPhase.title.lowercased())",
                    tint: engine.pendingBreakPhase.tint)
 
-            if engine.promptShowsCountdown {
-                Text("Starts in \(engine.promptCountdownRemaining)s")
-                    .font(.system(size: 56, weight: .bold, design: .rounded))
-                    .monospacedDigit()
-                    .contentTransition(.numericText())
-                    .animation(.snappy, value: engine.promptCountdownRemaining)
-            }
+            Text("Starts in \(engine.promptCountdownRemaining)s")
+                .font(.system(size: 56, weight: .bold, design: .rounded))
+                .monospacedDigit()
+                .contentTransition(.numericText())
+                .animation(.snappy, value: engine.promptCountdownRemaining)
 
             HStack(spacing: 14) {
                 Button { engine.snooze() } label: {
