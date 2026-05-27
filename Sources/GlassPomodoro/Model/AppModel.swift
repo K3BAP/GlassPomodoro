@@ -23,10 +23,10 @@ final class AppModel {
             }
         }
 
-        engine.onActivePhaseChange = { [weak self] phase in
+        engine.onOverlayStateChanged = { [weak self] in
             guard let self else { return }
             self.overlay.update(
-                isBreak: phase.isBreak,
+                visible: self.engine.isOverlayActive,
                 engine: self.engine,
                 enabled: self.settings.fullScreenBreakOverlay
             )

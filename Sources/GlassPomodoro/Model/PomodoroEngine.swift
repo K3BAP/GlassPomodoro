@@ -27,14 +27,28 @@ final class PomodoroEngine {
     /// Seconds left before the break auto-starts (only when `autoStartBreaks`).
     private(set) var promptCountdownRemaining: Int = 0
 
+    /// True after a break has finished and we are waiting for the user to confirm
+    /// they are ready to focus again (instead of auto-resuming).
+    private(set) var awaitingFocusConfirmation: Bool = false
+
     private let settings: Settings
     private var ticker: Task<Void, Never>?
 
     /// Called for user-facing announcements (title, body, phase used for sound choice).
     var onAnnounce: ((String, String, Phase) -> Void)?
 
-    /// Called when the active running phase changes (break begins / focus begins / reset).
-    var onActivePhaseChange: ((Phase) -> Void)?
+    /// Called whenever the full-screen overlay's visibility may have changed.
+    var onOverlayStateChanged: (() -> Void)?
+
+    /// Whether the full-screen overlay should currently be shown.
+    var isOverlayActive: Bool {
+        breakPromptActive || phase.isBreak || awaitingFocusConfirmation
+    }
+
+    /// Whether the break prompt is counting down to an automatic start.
+    var promptShowsCountdown: Bool {
+        breakPromptActive && settings.autoStartBreaks
+    }
 
     private static let totalKey = "stats.totalFocusSessions"
 
@@ -77,13 +91,14 @@ final class PomodoroEngine {
     func reset() {
         stopTicker()
         breakPromptActive = false
+        awaitingFocusConfirmation = false
         nextBreakDoubled = false
         completedFocusCount = 0
         totalFocusSessions = 0
         UserDefaults.standard.set(0, forKey: Self.totalKey)
         isRunning = false
         setPhase(.focus, autoStart: false)
-        onActivePhaseChange?(.focus)
+        notifyOverlay()
     }
 
     /// Skip the upcoming break (from the prompt) and double the next break instead.
@@ -110,6 +125,13 @@ final class PomodoroEngine {
         currentPhaseTotal += added
     }
 
+    /// Confirm readiness and start the next focus session (from the overlay/panel).
+    func confirmReadyToFocus() {
+        guard awaitingFocusConfirmation else { return }
+        awaitingFocusConfirmation = false
+        beginFocus(autoStart: true)
+    }
+
     /// Snooze: keep focusing for `snoozeMinutes` more, then prompt again.
     func snooze() {
         guard breakPromptActive else { return }
@@ -119,6 +141,7 @@ final class PomodoroEngine {
         currentPhaseTotal += added
         isRunning = true
         startTicker()
+        notifyOverlay()
     }
 
     /// Begin the due break immediately (from the prompt).
@@ -126,6 +149,17 @@ final class PomodoroEngine {
         guard breakPromptActive else { return }
         breakPromptActive = false
         beginBreak()
+    }
+
+    /// Maps the Esc key to a sensible action for the current overlay state.
+    func handleEscape() {
+        if breakPromptActive {
+            startBreakNow()
+        } else if awaitingFocusConfirmation {
+            confirmReadyToFocus()
+        } else if phase.isBreak {
+            endBreak()
+        }
     }
 
     // MARK: Phase transitions
@@ -137,9 +171,18 @@ final class PomodoroEngine {
             stopTicker()
             presentBreakPrompt()
         } else {
-            // A break finished — return to focus. (Focus completion is counted when the
-            // break begins or is skipped, not here, to avoid double-counting.)
-            beginFocus(autoStart: settings.autoStartFocus)
+            // A break finished. (Focus completion is counted when the break begins or is
+            // skipped, not here, to avoid double-counting.)
+            if settings.fullScreenBreakOverlay {
+                // Wait for the user to confirm they are ready to focus again.
+                isRunning = false
+                stopTicker()
+                awaitingFocusConfirmation = true
+                announce("Break over", "Ready to focus when you are.", .focus)
+                notifyOverlay()
+            } else {
+                beginFocus(autoStart: settings.autoStartFocus)
+            }
         }
     }
 
@@ -147,6 +190,7 @@ final class PomodoroEngine {
         breakPromptActive = true
         promptCountdownRemaining = max(0, settings.promptCountdownSeconds)
         announce("Time for a break", "Your \(pendingBreakPhase.title.lowercased()) is ready.", pendingBreakPhase)
+        notifyOverlay()
         if settings.autoStartBreaks {
             startTicker()   // ticker now drives the prompt countdown
         }
@@ -166,13 +210,18 @@ final class PomodoroEngine {
         let doubledNote = total != base ? " (doubled)" : ""
         setPhase(pendingBreakPhase, total: total, autoStart: true)
         announce("\(pendingBreakPhase.title) started", "Enjoy \(Self.format(total))\(doubledNote).", pendingBreakPhase)
-        onActivePhaseChange?(pendingBreakPhase)
+        notifyOverlay()
     }
 
     private func beginFocus(autoStart: Bool) {
+        awaitingFocusConfirmation = false
         setPhase(.focus, autoStart: autoStart)
         announce("Focus started", autoStart ? "Back to work — \(Self.format(secondsRemaining))." : "Ready when you are.", .focus)
-        onActivePhaseChange?(.focus)
+        notifyOverlay()
+    }
+
+    private func notifyOverlay() {
+        onOverlayStateChanged?()
     }
 
     private func setPhase(_ newPhase: Phase, total: Int? = nil, autoStart: Bool) {

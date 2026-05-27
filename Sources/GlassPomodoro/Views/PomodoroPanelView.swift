@@ -11,6 +11,8 @@ struct PomodoroPanelView: View {
         Group {
             if engine.breakPromptActive {
                 BreakPromptView(engine: engine, showCountdown: model.settings.autoStartBreaks)
+            } else if engine.awaitingFocusConfirmation {
+                confirmFocusView
             } else if showingSettings {
                 SettingsView(model: model, isPresented: $showingSettings)
             } else {
@@ -78,6 +80,29 @@ struct PomodoroPanelView: View {
             }
         }
         .animation(.snappy, value: done)
+    }
+
+    private var confirmFocusView: some View {
+        VStack(spacing: 16) {
+            Image(systemName: "checkmark.circle.fill")
+                .font(.system(size: 30, weight: .medium))
+                .foregroundStyle(Phase.focus.tint)
+            Text("Break complete")
+                .font(.headline)
+            Text("Ready to focus?")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+            Button {
+                engine.confirmReadyToFocus()
+            } label: {
+                Label("Start focusing", systemImage: "brain.head.profile")
+                    .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.glassProminent)
+            .tint(Phase.focus.tint)
+            .controlSize(.large)
+        }
+        .padding(20)
     }
 
     private var totalCounter: some View {

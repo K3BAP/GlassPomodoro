@@ -14,9 +14,9 @@ final class BreakOverlayController {
     private var keyMonitor: Any?
     private weak var engine: PomodoroEngine?
 
-    /// Drive visibility from the engine's active phase.
-    func update(isBreak: Bool, engine: PomodoroEngine, enabled: Bool) {
-        if isBreak && enabled {
+    /// Drive overlay visibility from the engine state.
+    func update(visible: Bool, engine: PomodoroEngine, enabled: Bool) {
+        if visible && enabled {
             show(engine: engine)
         } else {
             hide()
@@ -54,7 +54,7 @@ final class BreakOverlayController {
 
         keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
             if event.keyCode == 53 { // Escape
-                self?.engine?.endBreak()
+                self?.engine?.handleEscape()
                 return nil
             }
             return event
