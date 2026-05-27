@@ -112,20 +112,15 @@ final class PomodoroEngine {
         beginFocus(autoStart: true)
     }
 
-    /// Extend the current break by 5 minutes (from the full-screen overlay).
-    func extendBreak() {
-        guard phase.isBreak else { return }
-        let added = 5 * 60
-        secondsRemaining += added
-        currentPhaseTotal += added
-    }
-
     /// Confirm readiness and start the next focus session (from the overlay/panel).
     func confirmReadyToFocus() {
         guard awaitingFocusConfirmation else { return }
         awaitingFocusConfirmation = false
         beginFocus(autoStart: true)
     }
+
+    /// Minutes added per snooze, surfaced for the UI labels.
+    var snoozeMinutes: Int { max(1, settings.snoozeMinutes) }
 
     /// Snooze: keep focusing for `snoozeMinutes` more, then prompt again.
     func snooze() {

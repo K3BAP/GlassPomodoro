@@ -34,7 +34,7 @@ struct BreakPromptView: View {
                     Button {
                         engine.snooze()
                     } label: {
-                        Label("+5 min", systemImage: "hourglass")
+                        Label("+\(engine.snoozeMinutes) min", systemImage: "hourglass")
                             .frame(maxWidth: .infinity)
                     }
                     .buttonStyle(.glass)

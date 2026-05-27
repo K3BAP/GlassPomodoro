@@ -57,7 +57,7 @@ struct BreakOverlayView: View {
 
             HStack(spacing: 14) {
                 Button { engine.snooze() } label: {
-                    Label("+5 min", systemImage: "hourglass")
+                    Label("+\(engine.snoozeMinutes) min focus", systemImage: "hourglass")
                 }
                 .buttonStyle(.glass)
 
@@ -94,18 +94,11 @@ struct BreakOverlayView: View {
                 .contentTransition(.numericText())
                 .animation(.snappy, value: engine.timeString)
 
-            HStack(spacing: 14) {
-                Button { engine.extendBreak() } label: {
-                    Label("+5 min", systemImage: "hourglass")
-                }
-                .buttonStyle(.glass)
-
-                Button { engine.endBreak() } label: {
-                    Label("End break", systemImage: "stop.fill")
-                }
-                .buttonStyle(.glassProminent)
-                .tint(engine.phase.tint)
+            Button { engine.endBreak() } label: {
+                Label("End break", systemImage: "stop.fill")
             }
+            .buttonStyle(.glassProminent)
+            .tint(engine.phase.tint)
             .controlSize(.extraLarge)
 
             Text("Press Esc to end the break")
