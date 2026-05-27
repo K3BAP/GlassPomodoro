@@ -14,6 +14,9 @@ final class PomodoroEngine {
     /// Number of focus sessions completed in the current long-break cycle.
     private(set) var completedFocusCount: Int = 0
 
+    /// Lifetime total of finished focus sessions. Persisted; cleared by `reset()`.
+    private(set) var totalFocusSessions: Int = 0
+
     /// Set when a break is skipped; the next break that begins is doubled.
     private(set) var nextBreakDoubled: Bool = false
 
@@ -30,11 +33,22 @@ final class PomodoroEngine {
     /// Called for user-facing announcements (title, body, phase used for sound choice).
     var onAnnounce: ((String, String, Phase) -> Void)?
 
+    /// Called when the active running phase changes (break begins / focus begins / reset).
+    var onActivePhaseChange: ((Phase) -> Void)?
+
+    private static let totalKey = "stats.totalFocusSessions"
+
     init(settings: Settings) {
         self.settings = settings
         let total = settings.duration(for: .focus)
         self.secondsRemaining = total
         self.currentPhaseTotal = total
+        self.totalFocusSessions = UserDefaults.standard.integer(forKey: Self.totalKey)
+    }
+
+    private func recordFinishedFocus() {
+        totalFocusSessions += 1
+        UserDefaults.standard.set(totalFocusSessions, forKey: Self.totalKey)
     }
 
     // MARK: Derived
@@ -65,8 +79,11 @@ final class PomodoroEngine {
         breakPromptActive = false
         nextBreakDoubled = false
         completedFocusCount = 0
+        totalFocusSessions = 0
+        UserDefaults.standard.set(0, forKey: Self.totalKey)
         isRunning = false
         setPhase(.focus, autoStart: false)
+        onActivePhaseChange?(.focus)
     }
 
     /// Skip the upcoming break (from the prompt) and double the next break instead.
@@ -75,7 +92,22 @@ final class PomodoroEngine {
         breakPromptActive = false
         nextBreakDoubled = true
         completedFocusCount += 1
+        recordFinishedFocus()
         beginFocus(autoStart: settings.autoStartFocus)
+    }
+
+    /// End the current break early (from the full-screen overlay) and return to focus.
+    func endBreak() {
+        guard phase.isBreak else { return }
+        beginFocus(autoStart: settings.autoStartFocus)
+    }
+
+    /// Extend the current break by 5 minutes (from the full-screen overlay).
+    func extendBreak() {
+        guard phase.isBreak else { return }
+        let added = 5 * 60
+        secondsRemaining += added
+        currentPhaseTotal += added
     }
 
     /// Snooze: keep focusing for `snoozeMinutes` more, then prompt again.
@@ -105,7 +137,8 @@ final class PomodoroEngine {
             stopTicker()
             presentBreakPrompt()
         } else {
-            completedFocusCount += 1
+            // A break finished — return to focus. (Focus completion is counted when the
+            // break begins or is skipped, not here, to avoid double-counting.)
             beginFocus(autoStart: settings.autoStartFocus)
         }
     }
@@ -126,17 +159,20 @@ final class PomodoroEngine {
 
     private func beginBreak() {
         completedFocusCount += 1
+        recordFinishedFocus()
         let base = settings.duration(for: pendingBreakPhase)
         let total = nextBreakDoubled ? base * 2 : base
         nextBreakDoubled = false
         let doubledNote = total != base ? " (doubled)" : ""
         setPhase(pendingBreakPhase, total: total, autoStart: true)
         announce("\(pendingBreakPhase.title) started", "Enjoy \(Self.format(total))\(doubledNote).", pendingBreakPhase)
+        onActivePhaseChange?(pendingBreakPhase)
     }
 
     private func beginFocus(autoStart: Bool) {
         setPhase(.focus, autoStart: autoStart)
         announce("Focus started", autoStart ? "Back to work — \(Self.format(secondsRemaining))." : "Ready when you are.", .focus)
+        onActivePhaseChange?(.focus)
     }
 
     private func setPhase(_ newPhase: Phase, total: Int? = nil, autoStart: Bool) {

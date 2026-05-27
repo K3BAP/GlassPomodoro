@@ -8,16 +8,22 @@ struct GlassPomodoroApp: App {
         MenuBarExtra {
             PomodoroPanelView(model: model)
         } label: {
-            menuBarLabel
+            MenuBarLabelView(model: model)
         }
         .menuBarExtraStyle(.window)
     }
+}
 
-    @ViewBuilder
-    private var menuBarLabel: some View {
-        let symbol = model.engine.breakPromptActive
+/// The menu-bar label. Kept as a real `View` (not a computed property on the `App`)
+/// so `@Observable` changes re-render the label and the countdown ticks.
+private struct MenuBarLabelView: View {
+    @Bindable var model: AppModel
+
+    var body: some View {
+        let engine = model.engine
+        let symbol = engine.breakPromptActive
             ? "bell.badge.fill"
-            : (model.engine.isRunning ? model.engine.phase.symbolName : "timer")
+            : (engine.isRunning ? engine.phase.symbolName : "timer")
         if let title = model.menuBarTitle {
             Label(title, systemImage: symbol)
         } else {

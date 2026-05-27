@@ -36,6 +36,8 @@ struct PomodoroPanelView: View {
 
                 iterationDots
 
+                totalCounter
+
                 controls
             }
             .padding(20)
@@ -76,6 +78,14 @@ struct PomodoroPanelView: View {
             }
         }
         .animation(.snappy, value: done)
+    }
+
+    private var totalCounter: some View {
+        Label("\(engine.totalFocusSessions) focus sessions completed", systemImage: "checkmark.seal.fill")
+            .font(.caption)
+            .foregroundStyle(.secondary)
+            .contentTransition(.numericText())
+            .animation(.snappy, value: engine.totalFocusSessions)
     }
 
     private var controls: some View {

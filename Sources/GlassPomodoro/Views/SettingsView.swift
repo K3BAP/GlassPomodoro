@@ -41,7 +41,8 @@ struct SettingsView: View {
                     section("Notifications & feedback") {
                         toggleRow("Sound on phase change", value: bind(\.soundEnabled))
                         toggleRow("System notifications", value: bind(\.notificationsEnabled))
-                        toggleRow("Show countdown in menu bar", value: bind(\.showMenuBarCountdown))
+                        toggleRow("Focus countdown in menu bar", value: bind(\.showMenuBarCountdown))
+                        toggleRow("Full-screen break overlay", value: bind(\.fullScreenBreakOverlay))
                     }
 
                     section("General") {

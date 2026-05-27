@@ -7,6 +7,7 @@ import Observation
 final class AppModel {
     let settings: Settings
     let engine: PomodoroEngine
+    private let overlay = BreakOverlayController()
 
     init() {
         let settings = Settings.load()
@@ -20,6 +21,15 @@ final class AppModel {
             if settings.notificationsEnabled {
                 NotificationService.post(title: title, body: body)
             }
+        }
+
+        engine.onActivePhaseChange = { [weak self] phase in
+            guard let self else { return }
+            self.overlay.update(
+                isBreak: phase.isBreak,
+                engine: self.engine,
+                enabled: self.settings.fullScreenBreakOverlay
+            )
         }
 
         if settings.notificationsEnabled {
@@ -37,10 +47,12 @@ final class AppModel {
         }
     }
 
-    /// Short label shown next to the menu bar icon.
+    /// Short label shown next to the menu bar icon. Shows the remaining time only
+    /// during focus; breaks are handled by the full-screen overlay, so the menu bar
+    /// stays icon-only then.
     var menuBarTitle: String? {
         guard settings.showMenuBarCountdown else { return nil }
         if engine.breakPromptActive { return "Break?" }
-        return engine.timeString
+        return engine.phase == .focus ? engine.timeString : nil
     }
 }
