@@ -81,25 +81,37 @@ struct SettingsView: View {
         }
     }
 
-    private func stepperRow(_ label: String, value: Binding<Int>, range: ClosedRange<Int>) -> some View {
-        HStack {
+    @ViewBuilder
+    private func row<Control: View>(_ label: String, @ViewBuilder control: () -> Control) -> some View {
+        HStack(spacing: 12) {
             Text(label)
                 .font(.subheadline)
                 .fixedSize(horizontal: false, vertical: true)
-            Spacer()
+            Spacer(minLength: 8)
+            control()
+        }
+        .frame(maxWidth: .infinity)
+    }
+
+    private func stepperRow(_ label: String, value: Binding<Int>, range: ClosedRange<Int>) -> some View {
+        row(label) {
             Text("\(value.wrappedValue)")
                 .font(.subheadline.monospacedDigit())
                 .foregroundStyle(.secondary)
+                .frame(minWidth: 22, alignment: .trailing)
+                .contentTransition(.numericText())
+                .animation(.snappy, value: value.wrappedValue)
             Stepper("", value: value, in: range)
                 .labelsHidden()
         }
     }
 
     private func toggleRow(_ label: String, value: Binding<Bool>) -> some View {
-        Toggle(isOn: value) {
-            Text(label).font(.subheadline)
+        row(label) {
+            Toggle("", isOn: value)
+                .labelsHidden()
+                .toggleStyle(.switch)
+                .controlSize(.small)
         }
-        .toggleStyle(.switch)
-        .controlSize(.small)
     }
 }
