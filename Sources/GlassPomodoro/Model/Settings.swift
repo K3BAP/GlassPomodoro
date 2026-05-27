@@ -19,6 +19,7 @@ final class Settings: Codable {
     var launchAtLogin: Bool = false
     var showMenuBarCountdown: Bool = true
     var fullScreenBreakOverlay: Bool = true
+    var preventSleepWhileRunning: Bool = true
 
     init() {}
 
@@ -30,6 +31,7 @@ final class Settings: Codable {
         case autoStartFocus
         case soundEnabled, notificationsEnabled, launchAtLogin, showMenuBarCountdown
         case fullScreenBreakOverlay
+        case preventSleepWhileRunning
     }
 
     required init(from decoder: Decoder) throws {
@@ -46,6 +48,7 @@ final class Settings: Codable {
         launchAtLogin = try c.decodeIfPresent(Bool.self, forKey: .launchAtLogin) ?? false
         showMenuBarCountdown = try c.decodeIfPresent(Bool.self, forKey: .showMenuBarCountdown) ?? true
         fullScreenBreakOverlay = try c.decodeIfPresent(Bool.self, forKey: .fullScreenBreakOverlay) ?? true
+        preventSleepWhileRunning = try c.decodeIfPresent(Bool.self, forKey: .preventSleepWhileRunning) ?? true
     }
 
     func encode(to encoder: Encoder) throws {
@@ -62,6 +65,7 @@ final class Settings: Codable {
         try c.encode(launchAtLogin, forKey: .launchAtLogin)
         try c.encode(showMenuBarCountdown, forKey: .showMenuBarCountdown)
         try c.encode(fullScreenBreakOverlay, forKey: .fullScreenBreakOverlay)
+        try c.encode(preventSleepWhileRunning, forKey: .preventSleepWhileRunning)
     }
 
     // MARK: Persistence

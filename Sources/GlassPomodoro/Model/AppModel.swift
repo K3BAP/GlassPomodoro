@@ -8,6 +8,7 @@ final class AppModel {
     let settings: Settings
     let engine: PomodoroEngine
     private let overlay = BreakOverlayController()
+    private let sleepBlocker = SleepBlocker()
 
     init() {
         let settings = Settings.load()
@@ -36,6 +37,7 @@ final class AppModel {
             NotificationService.requestAuthorization()
         }
         LaunchAtLogin.set(settings.launchAtLogin)
+        trackSleepState()
     }
 
     /// Persist settings and reconcile side effects after the user edits them.
@@ -45,6 +47,25 @@ final class AppModel {
         if settings.notificationsEnabled {
             NotificationService.requestAuthorization()
         }
+        reconcileSleep()
+    }
+
+    /// Re-arm power assertions and re-subscribe to the engine state they depend on.
+    /// `withObservationTracking` fires once, so we re-register after each change.
+    private func trackSleepState() {
+        withObservationTracking {
+            reconcileSleep()
+        } onChange: { [weak self] in
+            Task { @MainActor in self?.trackSleepState() }
+        }
+    }
+
+    private func reconcileSleep() {
+        let timerActive = engine.isRunning || engine.breakPromptActive
+        sleepBlocker.update(
+            preventSystemSleep: settings.preventSleepWhileRunning && timerActive,
+            preventDisplaySleep: settings.fullScreenBreakOverlay && engine.isOverlayActive
+        )
     }
 
     /// Short label shown next to the menu bar icon. Shows the remaining time only

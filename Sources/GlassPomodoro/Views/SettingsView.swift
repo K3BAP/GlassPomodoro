@@ -46,6 +46,7 @@ struct SettingsView: View {
 
                     section("General") {
                         toggleRow("Launch at login", value: bind(\.launchAtLogin))
+                        toggleRow("Prevent sleep while running", value: bind(\.preventSleepWhileRunning))
                     }
                 }
                 .padding(16)
