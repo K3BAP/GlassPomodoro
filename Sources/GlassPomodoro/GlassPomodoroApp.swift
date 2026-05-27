@@ -26,6 +26,7 @@ private struct MenuBarLabelView: View {
             : (engine.isRunning ? engine.phase.symbolName : "timer")
         if let title = model.menuBarTitle {
             Label(title, systemImage: symbol)
+                .labelStyle(.titleAndIcon)
         } else {
             Image(systemName: symbol)
         }
